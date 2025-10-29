@@ -20,7 +20,7 @@ namespace PomodoroTimer.States
         }
 
         protected abstract State GetNextState();
-        protected abstract TimeSpan GetDuration();
+        public abstract TimeSpan GetDuration();
 
         protected virtual void OnTimerElapsed(object? state)
         {

@@ -21,8 +21,6 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     private bool _isPlayVisible = true;
     private bool _isPauseVisible = false;
     private bool _isStopVisible = false;
-    private TimeSpan _phaseTotalDuration = TimeSpan.Zero;
-    private string? _lastStateName;
     private IBrush? _progressStroke;
 
     private static readonly IBrush WorkBrush = new SolidColorBrush(Color.Parse("#2F80ED"));
@@ -34,12 +32,11 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         DataContext = this;
         var config = GetTimerConfig();
 
-        // Set dash count once on startup based on configured WorkDuration (min 9)
         SetDashCountFromWorkDuration(config.WorkDuration);
 
-        _timer = new Timer(config, UpdateTime);
+        _timer = new Timer(config, UpdateTime, HandleStateChange);
         ProgressStroke = WorkBrush;
-        UpdateButtons(_timer.GetState());
+        UpdateButtons();
     }
 
     public new event PropertyChangedEventHandler? PropertyChanged;
@@ -127,8 +124,6 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     {
         RemainingTimeText = remainingTime.ToString(@"mm\:ss");
         SyncProgress(state, remainingTime);
-        UpdateProgressBrush(state);
-        UpdateButtons(state);
     }
 
     private void OnPropertyChanged([CallerMemberName] string? name = null)
@@ -139,58 +134,33 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     {
         _timer.Play();
         _uiRunState = UiRunState.Playing;
-        UpdateButtons(_timer.GetState());
+        UpdateButtons();
     }
 
     private void OnPauseClicked(object? sender, RoutedEventArgs e)
     {
         _timer.Pause();
         _uiRunState = UiRunState.Paused;
-        UpdateButtons(_timer.GetState());
+        UpdateButtons();
     }
 
     private void OnStopClicked(object? sender, RoutedEventArgs e)
     {
         _timer.Stop();
         _uiRunState = UiRunState.Stopped;
-        UpdateButtons(_timer.GetState());
+        UpdateButtons();
     }
 
-    private void UpdateButtons(State state)
+    private void UpdateButtons()
     {
-        switch (_uiRunState)
-        {
-            case UiRunState.Playing:
-                IsPlayVisible = false;
-                IsPauseVisible = true;
-                IsStopVisible = false;
-                break;
-            case UiRunState.Paused:
-                IsPlayVisible = true;
-                IsPauseVisible = false;
-                IsStopVisible = true;
-                break;
-            case UiRunState.Stopped:
-            default:
-                IsPlayVisible = true;
-                IsPauseVisible = false;
-                IsStopVisible = false;
-                break;
-        }
+        IsPlayVisible = _uiRunState != UiRunState.Playing;
+        IsPauseVisible = _uiRunState == UiRunState.Playing && _timer.GetState() is WorkState;
+        IsStopVisible = _uiRunState == UiRunState.Paused || _timer.GetState() is not WorkState;
     }
 
     private void SyncProgress(State state, TimeSpan remaining)
     {
-        var stateName = state.GetType().Name;
-        if (_lastStateName != stateName || remaining > _phaseTotalDuration || _phaseTotalDuration == TimeSpan.Zero)
-        {
-            // Capture the phase's total duration at the first tick of a new phase
-            _phaseTotalDuration = remaining;
-            _lastStateName = stateName;
-            // DashCount is set once at startup; do not update per phase
-        }
-
-        var totalSecs = Math.Max(1.0, _phaseTotalDuration.TotalSeconds);
+        var totalSecs = Math.Max(1.0, state.GetDuration().TotalSeconds);
         var elapsedRatio = Math.Clamp(1.0 - (remaining.TotalSeconds / totalSecs), 0.0, 1.0);
         TimerProgress = elapsedRatio;
     }
@@ -200,35 +170,34 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         int dashCount;
         if (workDuration.TotalHours >= 1.0)
         {
-            dashCount = (int)Math.Round(workDuration.TotalHours) - 1; // e.g., 6h -> 5
+            dashCount = (int)workDuration.TotalHours - 1;
         }
         else if (workDuration.TotalMinutes >= 1.0)
         {
-            dashCount = (int)Math.Round(workDuration.TotalMinutes) - 1; // e.g., 25m -> 24
+            dashCount = (int)workDuration.TotalMinutes - 1;
         }
         else
         {
-            dashCount = (int)Math.Round(workDuration.TotalSeconds) - 1; // e.g., 10s -> 9
+            dashCount = (int)workDuration.TotalSeconds - 1;
         }
 
         dashCount = Math.Max(9, dashCount);
 
-        // Ensure UI-thread update
-        Dispatcher.UIThread.Post(() =>
+        if (CircularProgress != null)
         {
-            if (CircularProgress != null)
-            {
-                CircularProgress.DashCount = dashCount;
-            }
-        });
+            CircularProgress.DashCount = dashCount;
+        }
     }
 
-    private void UpdateProgressBrush(State state)
+    private void HandleStateChange(State oldState, State newState)
     {
-        var name = state.GetType().Name;
-        var isBreak = string.Equals(name, "ShortBreakState", StringComparison.Ordinal)
-                      || string.Equals(name, "LongBreakState", StringComparison.Ordinal);
-        ProgressStroke = isBreak ? BreakBrush : WorkBrush;
+        UpdateProgressBrush(newState);
+        UpdateButtons();
+    }
+    
+    private void UpdateProgressBrush(State newState)
+    {
+        ProgressStroke = newState is WorkState ? WorkBrush : BreakBrush;
     }
 
     private enum UiRunState

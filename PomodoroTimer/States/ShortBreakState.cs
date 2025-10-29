@@ -1,6 +1,6 @@
 ﻿namespace PomodoroTimer.States
 {
-    internal class ShortBreakState : State
+    public class ShortBreakState : State
     {
         bool _isStopped = false;
 
@@ -8,7 +8,7 @@
         {
         }
 
-        protected override TimeSpan GetDuration()
+        public override TimeSpan GetDuration()
         {
             return _appTimer.GetConfig().ShortBreakDuration;
         }

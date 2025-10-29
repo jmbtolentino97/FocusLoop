@@ -1,12 +1,12 @@
 ﻿namespace PomodoroTimer.States
 {
-    internal class WorkState : State
+    public class WorkState : State
     {
         public WorkState(ITimer timer) : base(timer)
         {
         }
 
-        protected override TimeSpan GetDuration()
+        public override TimeSpan GetDuration()
         {
             return _appTimer.GetConfig().WorkDuration;
         }

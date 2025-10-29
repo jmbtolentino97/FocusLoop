@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace PomodoroTimer.States
 {
-    internal class LongBreakState : State
+    public class LongBreakState : State
     {
         bool _isStopped = false;
 
@@ -14,7 +14,7 @@ namespace PomodoroTimer.States
         {
         }
 
-        protected override TimeSpan GetDuration()
+        public override TimeSpan GetDuration()
         {
             return _appTimer.GetConfig().LongBreakDuration;
         }
