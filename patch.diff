@@ -1,0 +1,6 @@
+*** Begin Patch
+*** Update File: FocusLoop/MainWindow.axaml
+@@
+-                            <Path Data="{iconPacks:MaterialImage Kind=Undo}" Fill="#333" Width="18" Height="18" Stretch="Uniform"/>
++                            <iconPacks:PackIconMaterial Kind="Undo" Width="18" Height="18" Foreground="#333"/>
+*** End Patch
