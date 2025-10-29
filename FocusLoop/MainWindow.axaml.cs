@@ -32,7 +32,12 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     {
         InitializeComponent();
         DataContext = this;
-        _timer = new Timer(GetTimerConfig(), UpdateTime);
+        var config = GetTimerConfig();
+
+        // Set dash count once on startup based on configured WorkDuration (min 9)
+        SetDashCountFromWorkDuration(config.WorkDuration);
+
+        _timer = new Timer(config, UpdateTime);
         ProgressStroke = WorkBrush;
         UpdateButtons(_timer.GetState());
     }
@@ -182,7 +187,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             // Capture the phase's total duration at the first tick of a new phase
             _phaseTotalDuration = remaining;
             _lastStateName = stateName;
-            UpdateDashCountForPhase(_phaseTotalDuration);
+            // DashCount is set once at startup; do not update per phase
         }
 
         var totalSecs = Math.Max(1.0, _phaseTotalDuration.TotalSeconds);
@@ -190,23 +195,23 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         TimerProgress = elapsedRatio;
     }
 
-    private void UpdateDashCountForPhase(TimeSpan total)
+    private void SetDashCountFromWorkDuration(TimeSpan workDuration)
     {
         int dashCount;
-        if (total.TotalHours >= 1.0)
+        if (workDuration.TotalHours >= 1.0)
         {
-            dashCount = (int)Math.Round(total.TotalHours) - 1; // e.g., 6h -> 5
+            dashCount = (int)Math.Round(workDuration.TotalHours) - 1; // e.g., 6h -> 5
         }
-        else if (total.TotalMinutes >= 1.0)
+        else if (workDuration.TotalMinutes >= 1.0)
         {
-            dashCount = (int)Math.Round(total.TotalMinutes) - 1; // e.g., 25m -> 24
+            dashCount = (int)Math.Round(workDuration.TotalMinutes) - 1; // e.g., 25m -> 24
         }
         else
         {
-            dashCount = (int)Math.Round(total.TotalSeconds) - 1; // e.g., 10s -> 9
+            dashCount = (int)Math.Round(workDuration.TotalSeconds) - 1; // e.g., 10s -> 9
         }
 
-        dashCount = Math.Max(1, dashCount);
+        dashCount = Math.Max(9, dashCount);
 
         // Ensure UI-thread update
         Dispatcher.UIThread.Post(() =>

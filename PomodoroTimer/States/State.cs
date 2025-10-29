@@ -22,7 +22,7 @@ namespace PomodoroTimer.States
         protected abstract State GetNextState();
         protected abstract TimeSpan GetDuration();
 
-        private void OnTimerElapsed(object? state)
+        protected virtual void OnTimerElapsed(object? state)
         {
             _remainingTime = _remainingTime.Subtract(TimeSpan.FromSeconds(1));
 
