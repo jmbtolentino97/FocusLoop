@@ -1,6 +1,7 @@
 using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Media;
@@ -8,11 +9,18 @@ using Avalonia.Threading;
 using Microsoft.Extensions.Configuration;
 using PomodoroTimer;
 using PomodoroTimer.States;
+using Microsoft.Toolkit.Uwp.Notifications;
+using Windows.UI.Notifications;
 
 namespace FocusLoop;
 
 public partial class MainWindow : Window, INotifyPropertyChanged
 {
+    [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
+    private static extern int SetCurrentProcessExplicitAppUserModelID(string appID);
+
+    private const string AppUserModelID = "FocusLoop.FocusLoop";
+
     private double _timerProgress;
     private string _remainingTimeText = "25:00";
     private Timer _timer;
@@ -30,11 +38,13 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     {
         InitializeComponent();
         DataContext = this;
-        var config = GetTimerConfig();
+        try { SetCurrentProcessExplicitAppUserModelID(AppUserModelID); } catch { }
+        try { WindowsShortcut.EnsureStartMenuShortcut(AppUserModelID, "Focus Loop"); } catch { }
 
+        var config = GetTimerConfig();
         SetDashCountFromWorkDuration(config.WorkDuration);
 
-        _timer = new Timer(config, UpdateTime, HandleStateChange);
+        _timer = new Timer(config, UpdateTime, OnStateChanged);
         ProgressStroke = WorkBrush;
         UpdateButtons();
     }
@@ -62,7 +72,6 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             OnPropertyChanged();
         }
     }
-
 
     public bool IsPlayVisible
     {
@@ -114,8 +123,8 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         return new Config()
         {
             WorkDuration = TimeSpan.Parse(configuration["WorkDuration"] ?? "00:25:00"),
-            ShortBreakDuration = TimeSpan.Parse(configuration["ShortBreakDuration"] ?? "00:05"),
-            LongBreakDuration = TimeSpan.Parse(configuration["LongBreakDuration"] ?? "00:15"),
+            ShortBreakDuration = TimeSpan.Parse(configuration["ShortBreakDuration"] ?? "00:05:00"),
+            LongBreakDuration = TimeSpan.Parse(configuration["LongBreakDuration"] ?? "00:15:00"),
             SessionsBeforeLongBreak = int.Parse(configuration["SessionsBeforeLongBreak"] ?? "4")
         };
     }
@@ -129,7 +138,6 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     private void OnPropertyChanged([CallerMemberName] string? name = null)
         => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 
-    // Button handlers (hook these up to your timer logic as needed)
     private void OnPlayClicked(object? sender, RoutedEventArgs e)
     {
         _timer.Play();
@@ -169,32 +177,43 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     {
         int dashCount;
         if (workDuration.TotalHours >= 1.0)
-        {
             dashCount = (int)workDuration.TotalHours - 1;
-        }
         else if (workDuration.TotalMinutes >= 1.0)
-        {
             dashCount = (int)workDuration.TotalMinutes - 1;
-        }
         else
-        {
             dashCount = (int)workDuration.TotalSeconds - 1;
-        }
 
         dashCount = Math.Max(9, dashCount);
-
         if (CircularProgress != null)
-        {
             CircularProgress.DashCount = dashCount;
-        }
     }
 
-    private void HandleStateChange(State oldState, State newState)
+    private void OnStateChanged(State oldState, State newState)
     {
         UpdateProgressBrush(newState);
         UpdateButtons();
+
+        var title = "Focus Loop";
+        var msg = GetFriendlyStateName(oldState) + " -> " + GetFriendlyStateName(newState);
+        try
+        {
+            var content = new ToastContentBuilder()
+                .AddText(title)
+                .AddText(msg)
+                .GetToastContent();
+            var toast = new ToastNotification(content.GetXml());
+            ToastNotificationManager.CreateToastNotifier(AppUserModelID).Show(toast);
+        }
+        catch (Exception ex) { }
     }
-    
+
+    private static string GetFriendlyStateName(State state)
+    {
+        if (state is WorkState) return "Work";
+        if (state is ShortBreakState) return "Short Break";
+        else return "Long Break";
+    }
+
     private void UpdateProgressBrush(State newState)
     {
         ProgressStroke = newState is WorkState ? WorkBrush : BreakBrush;
