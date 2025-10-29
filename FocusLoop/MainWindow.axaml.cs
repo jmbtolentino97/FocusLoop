@@ -1,26 +1,18 @@
 using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Media;
-using Avalonia.Threading;
 using Microsoft.Extensions.Configuration;
 using PomodoroTimer;
 using PomodoroTimer.States;
-using Microsoft.Toolkit.Uwp.Notifications;
-using Windows.UI.Notifications;
+using FocusLoop.Notifications;
 
 namespace FocusLoop;
 
 public partial class MainWindow : Window, INotifyPropertyChanged
 {
-    [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
-    private static extern int SetCurrentProcessExplicitAppUserModelID(string appID);
-
-    private const string AppUserModelID = "FocusLoop.FocusLoop";
-
     private double _timerProgress;
     private string _remainingTimeText = "25:00";
     private Timer _timer;
@@ -38,8 +30,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     {
         InitializeComponent();
         DataContext = this;
-        try { SetCurrentProcessExplicitAppUserModelID(AppUserModelID); } catch { }
-        try { WindowsShortcut.EnsureStartMenuShortcut(AppUserModelID, "Focus Loop"); } catch { }
+        WindowsToast.EnsureRegistration();
 
         var config = GetTimerConfig();
         SetDashCountFromWorkDuration(config.WorkDuration);
@@ -192,26 +183,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     {
         UpdateProgressBrush(newState);
         UpdateButtons();
-
-        var title = "Focus Loop";
-        var msg = GetFriendlyStateName(oldState) + " -> " + GetFriendlyStateName(newState);
-        try
-        {
-            var content = new ToastContentBuilder()
-                .AddText(title)
-                .AddText(msg)
-                .GetToastContent();
-            var toast = new ToastNotification(content.GetXml());
-            ToastNotificationManager.CreateToastNotifier(AppUserModelID).Show(toast);
-        }
-        catch (Exception ex) { }
-    }
-
-    private static string GetFriendlyStateName(State state)
-    {
-        if (state is WorkState) return "Work";
-        if (state is ShortBreakState) return "Short Break";
-        else return "Long Break";
+        WindowsToast.ShowStateChangeToast(oldState, newState);
     }
 
     private void UpdateProgressBrush(State newState)
