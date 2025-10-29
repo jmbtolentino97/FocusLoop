@@ -14,20 +14,6 @@ namespace FocusLoop;
 
 public partial class MainWindow : Window, INotifyPropertyChanged
 {
-    private readonly Timer _timer;
-    private UiRunState _uiRunState = UiRunState.Stopped;
-
-    private double _timerProgress;
-    private string _remainingTimeText = "25:00";
-    private bool _isPlayVisible = true;
-    private bool _isPauseVisible;
-    private bool _isStopVisible;
-    private IBrush? _progressStroke;
-    private int _dashCount = 24;
-
-    private static readonly IBrush WorkBrush = new SolidColorBrush(Color.Parse("#2F80ED"));
-    private static readonly IBrush BreakBrush = new SolidColorBrush(Color.Parse("#27AE60"));
-
     public MainWindow()
     {
         InitializeComponent();
@@ -53,12 +39,14 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         _uiRunState = UiRunState.Playing;
         UpdateButtons();
     }
+
     private void OnPauseClicked(object? sender, RoutedEventArgs e)
     {
         _timer.Pause();
         _uiRunState = UiRunState.Paused;
         UpdateButtons();
     }
+
     private void OnStopClicked(object? sender, RoutedEventArgs e)
     {
         _uiRunState = UiRunState.Stopped;
@@ -66,25 +54,11 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         UpdateButtons();
     }
 
-    public new event PropertyChangedEventHandler? PropertyChanged;
-    private void OnPropertyChanged([CallerMemberName] string? name = null)
-        => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
-
-    private bool SetField<T>(ref T field, T value, [CallerMemberName] string? name = null)
+    private async void OnSettingsClicked(object? sender, RoutedEventArgs e)
     {
-        if (Equals(field, value)) return false;
-        field = value!;
-        OnPropertyChanged(name);
-        return true;
+        var win = new SettingsWindow();
+        await win.ShowDialog(this);
     }
-
-    public double TimerProgress { get => _timerProgress; set => SetField(ref _timerProgress, value); }
-    public string RemainingTimeText { get => _remainingTimeText; set => SetField(ref _remainingTimeText, value); }
-    public bool IsPlayVisible { get => _isPlayVisible; set => SetField(ref _isPlayVisible, value); }
-    public bool IsPauseVisible { get => _isPauseVisible; set => SetField(ref _isPauseVisible, value); }
-    public bool IsStopVisible { get => _isStopVisible; set => SetField(ref _isStopVisible, value); }
-    public IBrush? ProgressStroke { get => _progressStroke; set => SetField(ref _progressStroke, value); }
-    public int DashCount { get => _dashCount; set => SetField(ref _dashCount, value); }
 
     private void UpdateButtons()
     {
@@ -102,5 +76,37 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         TimerProgress = elapsedRatio;
     }
 
+    private readonly Timer _timer;
+    public double TimerProgress { get => _timerProgress; set => SetField(ref _timerProgress, value); }
+    public string RemainingTimeText { get => _remainingTimeText; set => SetField(ref _remainingTimeText, value); }
+    public bool IsPlayVisible { get => _isPlayVisible; set => SetField(ref _isPlayVisible, value); }
+    public bool IsPauseVisible { get => _isPauseVisible; set => SetField(ref _isPauseVisible, value); }
+    public bool IsStopVisible { get => _isStopVisible; set => SetField(ref _isStopVisible, value); }
+    public IBrush? ProgressStroke { get => _progressStroke; set => SetField(ref _progressStroke, value); }
+    public int DashCount { get => _dashCount; set => SetField(ref _dashCount, value); }
+    private UiRunState _uiRunState = UiRunState.Stopped;
+
+    private static readonly IBrush WorkBrush = new SolidColorBrush(Color.Parse("#2F80ED"));
+    private static readonly IBrush BreakBrush = new SolidColorBrush(Color.Parse("#27AE60"));
+
+    public new event PropertyChangedEventHandler? PropertyChanged;
+    private void OnPropertyChanged([CallerMemberName] string? name = null)
+        => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+
+    private bool SetField<T>(ref T field, T value, [CallerMemberName] string? name = null)
+    {
+        if (Equals(field, value)) return false;
+        field = value!;
+        OnPropertyChanged(name);
+        return true;
+    }
+
+    private double _timerProgress;
+    private string _remainingTimeText = "25:00";
+    private bool _isPlayVisible = true;
+    private bool _isPauseVisible;
+    private bool _isStopVisible;
+    private IBrush? _progressStroke;
+    private int _dashCount = 24;
     private enum UiRunState { Stopped, Playing, Paused }
 }

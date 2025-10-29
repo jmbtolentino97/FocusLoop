@@ -1,0 +1,64 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        x:Class="FocusLoop.SettingsWindow"
+        Title="Settings"
+        Width="380"
+        Height="450"
+        CanResize="False"
+        Background="#FFFFFF"
+        mc:Ignorable="d">
+    <Grid RowDefinitions="Auto,*,Auto" Margin="16">
+        <TextBlock Text="Settings"
+                   FontSize="18"
+                   FontWeight="SemiBold"
+                   Margin="0,0,0,8"/>
+
+        <Grid Grid.Row="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="180"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Row="0" Grid.ColumnSpan="2"
+                       Text="Configure timer behavior and durations."
+                       Margin="0,0,0,8"/>
+
+            <TextBlock Grid.Row="1" Grid.Column="0" Text="Work Duration:"/>
+            <TextBox Grid.Row="1" Grid.Column="1" Width="120" Watermark="25:00"/>
+
+            <TextBlock Grid.Row="2" Grid.Column="0" Text="Auto Start Work:"/>
+            <ToggleSwitch Grid.Row="2" Grid.Column="1" Width="60" Content="" OnContent="" OffContent=""/>
+
+            <TextBlock Grid.Row="3" Grid.Column="0" Text="Auto Start Break:"/>
+            <ToggleSwitch Grid.Row="3" Grid.Column="1" Width="60" Content="" OnContent="" OffContent=""/>
+
+            <TextBlock Grid.Row="4" Grid.Column="0" Text="Long Break After:"/>
+            <TextBox Grid.Row="4" Grid.Column="1" Width="60" Watermark="4"/>
+
+            <TextBlock Grid.Row="5" Grid.Column="0" Text="Show Window on Break:"/>
+            <ToggleSwitch Grid.Row="5" Grid.Column="1" Width="60" Content="" OnContent="" OffContent=""/>
+
+            <TextBlock Grid.Row="6" Grid.Column="0" Text="Short Break:"/>
+            <TextBox Grid.Row="6" Grid.Column="1" Width="120" Watermark="05:00"/>
+
+            <TextBlock Grid.Row="7" Grid.Column="0" Text="Long Break:"/>
+            <TextBox Grid.Row="7" Grid.Column="1" Width="120" Watermark="15:00"/>
+        </Grid>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+            <Button Content="Close" Click="OnCloseClicked"/>
+        </StackPanel>
+    </Grid>
+</Window>

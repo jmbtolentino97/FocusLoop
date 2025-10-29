@@ -65,7 +65,41 @@
                 </ControlTemplate>
             </Setter>
         </Style>
-        </Window.Styles>
+        <Style Selector="Button.settings">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="#E1E6EC"/>
+            <Setter Property="BorderThickness" Value="1.5"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Width" Value="28"/>
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border Background="Transparent" CornerRadius="999" BorderBrush="#E1E6EC" BorderThickness="1.5">
+                        <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <Image Width="13" Height="13" Source="{iconPacks:MaterialImage Kind=Cog}"/>
+                        </Grid>
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+        </Style>
+        <Style Selector="Button.settings">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="#E1E6EC"/>
+            <Setter Property="BorderThickness" Value="1.5"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Width" Value="28"/>
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border Background="Transparent" CornerRadius="999" BorderBrush="#E1E6EC" BorderThickness="1.5">
+                        <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <Image Width="13" Height="13" Source="{iconPacks:MaterialImage Kind=Cog}"/>
+                        </Grid>
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+        </Style>
+    </Window.Styles>
     <Grid RowDefinitions="*,Auto,*,Auto" Margin="24">
         <!-- Overlay title text in extended title bar area -->
         <TextBlock Grid.Row="0"
@@ -76,6 +110,13 @@
                    Foreground="#666"
                    Opacity="0.8"
                    IsHitTestVisible="False"/>
+        <Button Grid.Row="0"
+                Classes="settings"
+                ToolTip.Tip="Settings"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                Margin="0,6,6,0"
+                Click="OnSettingsClicked"/>
         <!-- Timer area: circular progress with centered time label -->
         <Grid Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,16,0,0">
             <controls:CircularProgressBar x:Name="CircularProgress"
